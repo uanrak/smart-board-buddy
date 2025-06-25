@@ -22,3 +22,9 @@ export interface ChatMessage {
   sender: 'user' | 'ai';
   timestamp: Date;
 }
+
+export interface NotionBlock {
+  id: string;
+  type: string;
+  [key: string]: any;
+}
