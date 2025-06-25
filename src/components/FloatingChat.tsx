@@ -22,28 +22,42 @@ export const FloatingChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputValue, setInputValue] = useState('');
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        text: inputValue,
-        sender: 'user',
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputValue('');
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updatedMessages }),
+      });
+      const data = await res.json();
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: data.response || 'Hubo un problema al obtener respuesta.',
+        sender: 'ai',
         timestamp: new Date(),
       };
-
-      setMessages(prev => [...prev, userMessage]);
-      setInputValue('');
-
-      // Simular respuesta del AI
-      setTimeout(() => {
-        const aiResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: `Entiendo que quieres: "${inputValue}". Te puedo ayudar a crear tareas, organizarlas por prioridad, o darte sugerencias para mejorar tu productividad. ¿Qué prefieres?`,
-          sender: 'ai',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiResponse]);
-      }, 1000);
+      setMessages(prev => [...prev, aiResponse]);
+    } catch {
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'No se pudo contactar al servidor.',
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     }
   };
 
