@@ -71,3 +71,22 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## API configuration
+
+This project includes a simple Node server that connects with the Notion and OpenAI APIs.
+Copy `.env.example` to `.env` and provide your credentials:
+
+```
+OPENAI_API_KEY=<your openai key>
+NOTION_TOKEN=<your notion token>
+NOTION_DATABASE_ID=<your database id>
+```
+
+Start the API server with:
+
+```
+npm run server
+```
+
+The frontend will send chat messages to `/api/chat` to fetch or create tasks using these APIs.
