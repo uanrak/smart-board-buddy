@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Header } from '@/components/Header';
@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { TaskBoard } from '@/components/TaskBoard';
 import { FloatingChat } from '@/components/FloatingChat';
 import { Board, Task } from '@/types';
+import { getTasksFromNotion } from '@/services/notion'
 
 const initialBoards: Board[] = [
   {
@@ -44,6 +45,26 @@ const Index = () => {
   const [boards, setBoards] = useState<Board[]>(initialBoards);
   const [selectedBoardId, setSelectedBoardId] = useState('1');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    // Simulate fetching boards from an API
+    const fetchBoards = async () => {
+      try {
+        
+        const tasks=  await getTasksFromNotion()
+        console.log(` fetchBoards ~ tasks:`, tasks)
+        // For this example, we use the initialBoards defined above
+        setBoards(initialBoards);
+      } catch (error) {
+        console.error('Error fetching boards:', error);
+        // Fallback to initial boards in case of error
+        setBoards(initialBoards);
+        
+      }
+    };
+
+    fetchBoards();
+  }, []);
 
   const selectedBoard = boards.find(board => board.id === selectedBoardId);
 

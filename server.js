@@ -21,7 +21,7 @@ async function getRequestBody(req) {
   });
 }
 
-async function getTasksFromNotion() {
+export async function getTasksFromNotion() {
   const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
     method: 'POST',
     headers: {
