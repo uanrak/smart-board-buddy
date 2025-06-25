@@ -25,6 +25,8 @@ export interface ChatMessage {
 
 export interface NotionBlock {
   id: string;
-  type: string;
+  type?: string;
+  object?: string;
+  properties?: Record<string, any>;
   [key: string]: any;
 }

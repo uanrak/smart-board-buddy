@@ -1,7 +1,8 @@
 import { NotionBlock } from '@/types'
 
 interface NotionRendererProps {
-  blocks: NotionBlock[]
+  // Can be an array of blocks or a Notion list response
+  blocks: NotionBlock[] | { object: 'list'; results: NotionBlock[] }
 }
 
 function extractText(block: any): string {
@@ -10,10 +11,59 @@ function extractText(block: any): string {
 }
 
 export const NotionRenderer = ({ blocks }: NotionRendererProps) => {
+  const normalizedBlocks = Array.isArray(blocks)
+    ? blocks
+    : blocks?.object === 'list'
+      ? (blocks as any).results
+      : []
+
   return (
     <div className="space-y-2">
-      {blocks.map((block) => {
-        const { id, type } = block
+      {normalizedBlocks.map((block) => {
+        const { id, type, object, properties } = block
+
+        if (object === 'page') {
+          const titleParts = properties?.Name?.title || []
+          const title = titleParts.map((t: any) => t.plain_text).join('')
+          return (
+            <div key={id} className="p-4 border rounded space-y-1">
+              <h2 className="text-lg font-bold">{title}</h2>
+              <ul className="text-sm space-y-0.5">
+                {Object.entries(properties || {}).map(([key, prop]) => {
+                  if (key === 'Name') return null
+                  if (prop.type === 'multi_select') {
+                    const values = prop.multi_select
+                      .map((v: any) => v.name)
+                      .join(', ')
+                    return (
+                      <li key={key}>
+                        <strong>{key}:</strong> {values}
+                      </li>
+                    )
+                  }
+                  if (prop.type === 'relation') {
+                    return (
+                      <li key={key}>
+                        <strong>{key}:</strong> {prop.relation.length} relation{prop.relation.length === 1 ? '' : 's'}
+                      </li>
+                    )
+                  }
+                  if (prop.type === 'formula') {
+                    const value = prop.formula[prop.formula.type]
+                    if (value === null || value === undefined) return null
+                    return (
+                      <li key={key}>
+                        <strong>{key}:</strong> {String(value)}
+                      </li>
+                    )
+                  }
+                  return null
+                })}
+              </ul>
+            </div>
+          )
+        }
+
         switch (type) {
           case 'heading_1':
             return (
