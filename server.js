@@ -85,6 +85,16 @@ async function callOpenAI(messages, functions = []) {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Basic CORS headers to allow requests from the frontend
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
   if (req.method === 'POST' && req.url === '/api/chat') {
     try {
       const { messages } = await getRequestBody(req);
@@ -140,6 +150,15 @@ const server = http.createServer(async (req, res) => {
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ response: choice.content }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+  } else if (req.method === 'GET' && req.url === '/api/tasks') {
+    try {
+      const tasks = await getTasksFromNotion();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ tasks }));
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: e.message }));
