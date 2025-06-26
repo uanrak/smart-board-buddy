@@ -1,117 +1,97 @@
-import { NotionBlock } from '@/types'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NotionDataResponse } from '@/interfaces/Notion'
+import React, { useMemo } from 'react'
+import { render } from 'react-dom'
 
-interface NotionRendererProps {
-  // Can be an array of blocks or a Notion list response
-  blocks: NotionBlock[] | { object: 'list'; results: NotionBlock[] }
+interface AdvancedTodoProps {
+  blocks: NotionDataResponse
 }
 
-function extractText(block: any): string {
-  const rich = block?.rich_text || []
-  return rich.map((t: any) => t.plain_text).join('')
-}
+const NotionRenderer = ({ blocks }: AdvancedTodoProps) => {
+  const renderBlock = ({ key, value }: { key: string; value: any }) => {
+    switch (value.type) {
+      case 'title':
+        return (
+          <h2 key={key} className="text-xl font-bold">
+            {value.title[0]?.plain_text || 'No Title'}
+          </h2>
+        )
+      case 'rich_text':
+        return (
+          <p key={key} className="text-base">
+            {value.rich_text[0]?.plain_text || 'No Content'}
+          </p>
+        )
+      case 'number':
+        return (
+          <p key={key} className="text-base">
+            {value.number || 'No Number'}
+          </p>
+        )
+      case 'select':
+        return (
+          <p key={key} className="text-base">
+            {value.select?.name || 'No Selection'}
+          </p>
+        )
+      case 'formula': {
+        const formulaNumber = (value.formula?.number || 0) * 100
 
-export const NotionRenderer = ({ blocks }: NotionRendererProps) => {
-  const normalizedBlocks = Array.isArray(blocks)
-    ? blocks
-    : blocks?.object === 'list'
-      ? (blocks as any).results
-      : []
+        const pct = Math.max(0, Math.min(100, formulaNumber))
+        return (
+          <div className="flex align-center space-x-2" key={key}>
+            <div
+              style={{
+                position: 'relative',
+                width:50,
+                height: '4px',
+                background: '#2d2d2d',
+                borderRadius: '2px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${pct}%`,
+                  height: '100%',
+                  background: '#4ade80', // verde claro
+                }}
+              />
+            </div>
+            <p key={key} className="text-base">
+              {`${formulaNumber.toFixed(1)}%`}
+            </p>
+          </div>
+        )
+      }
+      case 'multi_select':
+        return (
+          <div key={key} className="flex space-x-2">
+            {value.multi_select.map((item: any) => (
+              <span
+                key={item.id}
+                className="bg-blue-100 text-blue-800 px-2 py-1 rounded"
+              >
+                {item.name}
+              </span>
+            ))}
+          </div>
+        )
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="space-y-2">
-      {normalizedBlocks.map((block) => {
-        const { id, type, object, properties } = block
-
-        if (object === 'page') {
-          const titleParts = properties?.Name?.title || []
-          const title = titleParts.map((t: any) => t.plain_text).join('')
-          return (
-            <div key={id} className="p-4 border rounded space-y-1">
-              <h2 className="text-lg font-bold">{title}</h2>
-              <ul className="text-sm space-y-0.5">
-                {Object.entries(properties || {}).map(([key, prop]) => {
-                  if (key === 'Name') return null
-                  if (prop.type === 'multi_select') {
-                    const values = prop.multi_select
-                      .map((v: any) => v.name)
-                      .join(', ')
-                    return (
-                      <li key={key}>
-                        <strong>{key}:</strong> {values}
-                      </li>
-                    )
-                  }
-                  if (prop.type === 'relation') {
-                    return (
-                      <li key={key}>
-                        <strong>{key}:</strong> {prop.relation.length} relation{prop.relation.length === 1 ? '' : 's'}
-                      </li>
-                    )
-                  }
-                  if (prop.type === 'formula') {
-                    const value = prop.formula[prop.formula.type]
-                    if (value === null || value === undefined) return null
-                    return (
-                      <li key={key}>
-                        <strong>{key}:</strong> {String(value)}
-                      </li>
-                    )
-                  }
-                  return null
-                })}
-              </ul>
-            </div>
-          )
-        }
-
-        switch (type) {
-          case 'heading_1':
-            return (
-              <h1 key={id} className="text-2xl font-bold">
-                {extractText(block.heading_1)}
-              </h1>
-            )
-          case 'heading_2':
-            return (
-              <h2 key={id} className="text-xl font-semibold">
-                {extractText(block.heading_2)}
-              </h2>
-            )
-          case 'heading_3':
-            return (
-              <h3 key={id} className="text-lg font-semibold">
-                {extractText(block.heading_3)}
-              </h3>
-            )
-          case 'paragraph':
-            return (
-              <p key={id} className="text-base">
-                {extractText(block.paragraph)}
-              </p>
-            )
-          case 'to_do':
-            return (
-              <label key={id} className="flex items-center gap-2">
-                <input type="checkbox" disabled checked={block.to_do?.checked} />
-                <span>{extractText(block.to_do)}</span>
-              </label>
-            )
-          case 'bulleted_list_item':
-            return (
-              <ul key={id} className="list-disc ml-6">
-                <li>{extractText(block.bulleted_list_item)}</li>
-              </ul>
-            )
-          case 'numbered_list_item':
-            return (
-              <ol key={id} className="list-decimal ml-6">
-                <li>{extractText(block.numbered_list_item)}</li>
-              </ol>
-            )
-          default:
-            return null
-        }
-      })}
+    <div className="space-y-6">
+      {Object.entries(blocks?.results[0].properties).reduce(
+        (accum, [key, value]) => {
+          return [...accum, renderBlock({ key, value })]
+        },
+        []
+      )}
     </div>
   )
 }
+
+export default NotionRenderer
