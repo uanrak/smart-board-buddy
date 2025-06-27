@@ -1,11 +1,10 @@
-
-import { useState } from 'react';
-import { MessageCircle, Send, X, Minimize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChatMessage } from '@/types';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { MessageCircle, Send, X, Minimize2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { ChatMessage } from '@/types'
+import { cn } from '@/lib/utils'
 import { callOpenAI } from '@/services/openai'
 
 const initialMessages: ChatMessage[] = [
@@ -14,57 +13,64 @@ const initialMessages: ChatMessage[] = [
     text: '¡Hola! Soy tu asistente de planificación. ¿En qué puedo ayudarte hoy?',
     sender: 'ai',
     timestamp: new Date(),
-  }
-];
+  },
+]
 
 export const FloatingChat = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [inputValue, setInputValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+  const [inputValue, setInputValue] = useState('')
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim()) return
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
       timestamp: new Date(),
-    };
+    }
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInputValue('');
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setInputValue('')
 
+    console.log(` handleSendMessage ~ updatedMessages:`, updatedMessages)
     try {
-      const response = await callOpenAI(updatedMessages);
+      const response = await callOpenAI(updatedMessages)
+      if (response.error) {
+        console.error('Error from OpenAI:', response.error)
+        throw new Error(response.error.message || 'Error desconocido')
+      }
+      console.log(` handleSendMessage ~ response:`, response)
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: response || 'Hubo un problema al obtener respuesta.',
         sender: 'ai',
         timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    } catch {
+      }
+      setMessages((prev) => [...prev, aiResponse])
+    } catch (error) {
+      console.log(` handleSendMessage ~ error:`, error.message)
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: 'No se pudo contactar al servidor.',
+        text: error.message ?? 'No se pudo contactar al servidor.',
         sender: 'ai',
         timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      }
+      setMessages((prev) => [...prev, errorMessage])
     }
-  };
+  }
 
   const toggleChat = () => {
-    setIsOpen(!isOpen);
-    setIsMinimized(false);
-  };
+    setIsOpen(!isOpen)
+    setIsMinimized(false)
+  }
 
   const minimizeChat = () => {
-    setIsMinimized(!isMinimized);
-  };
+    setIsMinimized(!isMinimized)
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -76,10 +82,12 @@ export const FloatingChat = () => {
           <MessageCircle className="h-6 w-6" />
         </Button>
       ) : (
-        <div className={cn(
-          "bg-white rounded-lg border border-gray-200 shadow-xl w-80 transition-all duration-300",
-          isMinimized ? "h-14" : "h-96"
-        )}>
+        <div
+          className={cn(
+            'bg-white rounded-lg border border-gray-200 shadow-xl w-80 transition-all duration-300',
+            isMinimized ? 'h-14' : 'h-96'
+          )}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
@@ -115,16 +123,18 @@ export const FloatingChat = () => {
                     <div
                       key={message.id}
                       className={cn(
-                        "flex",
-                        message.sender === 'user' ? "justify-end" : "justify-start"
+                        'flex',
+                        message.sender === 'user'
+                          ? 'justify-end'
+                          : 'justify-start'
                       )}
                     >
                       <div
                         className={cn(
-                          "max-w-xs px-3 py-2 rounded-lg text-sm",
+                          'max-w-xs px-3 py-2 rounded-lg text-sm',
                           message.sender === 'user'
-                            ? "bg-blue-600 text-white rounded-br-sm"
-                            : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                            ? 'bg-blue-600 text-white rounded-br-sm'
+                            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                         )}
                       >
                         {message.text}
@@ -158,5 +168,5 @@ export const FloatingChat = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}

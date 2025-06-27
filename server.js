@@ -1,7 +1,7 @@
 // Simple Node server for ChatGPT and Notion integration
 import http from 'http';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.VITE_OPENAI_API_KEY;
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
