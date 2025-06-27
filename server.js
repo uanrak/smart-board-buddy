@@ -68,21 +68,7 @@ async function createTaskInNotion(title, description = '') {
   };
 }
 
-async function callOpenAI(messages, functions = []) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo-0613',
-      messages,
-      functions
-    })
-  });
-  return res.json();
-}
+
 
 const server = http.createServer(async (req, res) => {
   // Basic CORS headers to allow requests from the frontend

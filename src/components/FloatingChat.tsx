@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '@/types';
 import { cn } from '@/lib/utils';
+import { callOpenAI } from '@/services/openai'
 
 const initialMessages: ChatMessage[] = [
   {
@@ -37,15 +38,10 @@ export const FloatingChat = () => {
     setInputValue('');
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: updatedMessages }),
-      });
-      const data = await res.json();
+      const response = await callOpenAI(updatedMessages);
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: data.response || 'Hubo un problema al obtener respuesta.',
+        text: response || 'Hubo un problema al obtener respuesta.',
         sender: 'ai',
         timestamp: new Date(),
       };
