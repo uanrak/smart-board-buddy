@@ -14,17 +14,22 @@ export async function callOpenAI(messages, functions = []) {
     };
   });
 
+  const body: any = {
+    model: 'gpt-4o',
+    messages: formattedMessages,
+  }
+
+  if (functions.length > 0) {
+    body.functions = functions
+  }
+
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: formattedMessages,
-      functions,
-    }),
+    body: JSON.stringify(body),
   });
 
   return res.json();
