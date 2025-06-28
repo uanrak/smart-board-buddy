@@ -3,7 +3,7 @@ import http from 'http';
 
 const OPENAI_API_KEY = process.env.VITE_OPENAI_API_KEY;
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
+const NOTION_PAGE_ID = process.env.NOTION_PAGE_ID;
 
 async function getRequestBody(req) {
   return new Promise((resolve, reject) => {
@@ -22,49 +22,56 @@ async function getRequestBody(req) {
 }
 
 export async function getTasksFromNotion() {
-  const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${NOTION_TOKEN}`,
-      'Content-Type': 'application/json',
-      'Notion-Version': '2022-06-28'
-    },
-    body: JSON.stringify({})
-  });
+  const res = await fetch(
+    `https://api.notion.com/v1/blocks/${NOTION_PAGE_ID}/children`,
+    {
+      headers: {
+        Authorization: `Bearer ${NOTION_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28',
+      },
+    }
+  );
   const data = await res.json();
-  return data.results.map(page => ({
-    id: page.id,
-    title: page.properties.Name?.title?.[0]?.plain_text || '',
-    status: page.properties.Status?.select?.name || '',
-    priority: page.properties.Priority?.select?.name || ''
-  }));
+  return data.results
+    .filter(b => b.type === 'to_do')
+    .map(block => ({
+      id: block.id,
+      title: block.to_do?.rich_text?.[0]?.plain_text || '',
+      status: block.to_do?.checked ? 'done' : 'todo',
+      priority: 'medium',
+    }));
 }
 
 async function createTaskInNotion(title, description = '') {
-  const res = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${NOTION_TOKEN}`,
-      'Content-Type': 'application/json',
-      'Notion-Version': '2022-06-28'
-    },
-    body: JSON.stringify({
-      parent: { database_id: NOTION_DATABASE_ID },
-      properties: {
-        Name: {
-          title: [{ text: { content: title } }]
-        },
-        Description: description ? {
-          rich_text: [{ text: { content: description } }]
-        } : undefined
-      }
-    })
-  });
+  const res = await fetch(
+    `https://api.notion.com/v1/blocks/${NOTION_PAGE_ID}/children`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${NOTION_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28',
+      },
+      body: JSON.stringify({
+        children: [
+          {
+            object: 'block',
+            type: 'to_do',
+            to_do: {
+              rich_text: [{ text: { content: title } }],
+              checked: false,
+            },
+          },
+        ],
+      }),
+    }
+  );
   const data = await res.json();
   return {
-    id: data.id,
+    id: data?.results?.[0]?.id || '',
     title,
-    description
+    description,
   };
 }
 

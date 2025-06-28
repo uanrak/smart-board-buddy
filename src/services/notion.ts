@@ -16,7 +16,7 @@ export class NotionService {
     }
   }
 
-  async getDatabases() {
+  async getPages() {
     if (this.apiBaseUrl) {
       const res = await fetch(`${this.apiBaseUrl}/notion/`)
       const data = await res.json()
@@ -25,31 +25,26 @@ export class NotionService {
     const res = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: this.headers,
-      body: JSON.stringify({ filter: { property: 'object', value: 'database' } }),
+      body: JSON.stringify({ filter: { property: 'object', value: 'page' } }),
     })
     const data = await res.json()
     return data.results
   }
 
-  async getDatabasePages(databaseId: string) {
+  async getPage(pageId: string) {
     if (this.apiBaseUrl) {
-      const res = await fetch(`${this.apiBaseUrl}/notion/databases/${databaseId}`)
+      const res = await fetch(`${this.apiBaseUrl}/notion/${pageId}`)
       return res.json()
     }
-    const res = await fetch(
-      `https://api.notion.com/v1/databases/${databaseId}/query`,
-      {
-        method: 'POST',
-        headers: this.headers,
-        body: JSON.stringify({}),
-      }
-    )
+    const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+      headers: this.headers,
+    })
     return res.json()
   }
 
   async getPageBlocks(pageId: string) {
     if (this.apiBaseUrl) {
-      const res = await fetch(`${this.apiBaseUrl}/notion/databases/${pageId}`)
+      const res = await fetch(`${this.apiBaseUrl}/notion/${pageId}/blocks`)
       return res.json()
     }
     const res = await fetch(
