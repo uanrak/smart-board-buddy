@@ -81,6 +81,7 @@ Copy `.env.example` to `.env` and provide your credentials:
 VITE_OPENAI_API_KEY=<your openai key>
 NOTION_TOKEN=<your notion token>
 NOTION_DATABASE_ID=<your database id>
+VITE_API_BASE_URL=https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com
 ```
 
 Start the API server with:
@@ -88,5 +89,6 @@ Start the API server with:
 ```
 npm run server
 ```
-
-The frontend will send chat messages to `/api/chat` to fetch or create tasks using these APIs.
+The frontend uses `VITE_API_BASE_URL` to communicate with the backend. By default it
+points to the hosted instance at `https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com`.
+If you prefer running the local Node server, update this variable accordingly.
