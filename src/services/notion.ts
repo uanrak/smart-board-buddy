@@ -1,7 +1,11 @@
 export async function getTasksFromNotion() {
-  const res = await fetch('/api/tasks')
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    'https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com'
+
+  const res = await fetch(`${API_BASE_URL}/notion/`)
   const data = await res.json()
-  return data.tasks
+  return data
 }
 
 export async function getPageBlocks(pageId: string) {
