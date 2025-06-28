@@ -1,19 +1,37 @@
-export async function callOpenAI(messages) {
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
-    'https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com';
+import type { ChatMessage } from '@/types'
 
-  const last = messages[messages.length - 1];
-  const prompt = last.content ?? last.text ?? '';
+export class OpenAIService {
+  private apiKey: string
+  private apiUrl: string
 
-  const res = await fetch(`${API_BASE_URL}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prompt }),
-  });
+  constructor() {
+    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
+    this.apiUrl =
+      import.meta.env.VITE_OPENAI_API_URL ||
+      'https://api.openai.com/v1/chat/completions'
+  }
 
-  const data = await res.json();
-  return data.answer ?? data;
+  async chat(messages: ChatMessage[]) {
+    const formatted = messages.map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text,
+    }))
+
+    const res = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: formatted,
+      }),
+    })
+
+    const data = await res.json()
+    return data?.choices?.[0]?.message?.content
+  }
 }
+
+export const openAIService = new OpenAIService()

@@ -78,7 +78,7 @@ This project includes a simple Node server that connects with the Notion and Ope
 Copy `.env.example` to `.env` and provide your credentials:
 
 ```
-OPENAI_API_KEY=<your openai key>
+VITE_OPENAI_API_KEY=<your openai key>
 NOTION_TOKEN=<your notion token>
 NOTION_DATABASE_ID=<your database id>
 ```
