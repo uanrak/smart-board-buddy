@@ -80,7 +80,7 @@ Copy `.env.example` to `.env` and provide your credentials:
 ```
 VITE_OPENAI_API_KEY=<your openai key>
 NOTION_TOKEN=<your notion token>
-NOTION_DATABASE_ID=<your database id>
+NOTION_PAGE_ID=<your page id>
 VITE_API_BASE_URL=https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com
 ```
 

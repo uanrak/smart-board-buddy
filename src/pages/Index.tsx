@@ -116,11 +116,11 @@ const Index = () => {
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const databases = await notionService.getDatabases()
-        if (databases.length) {
-          const boardsFromNotion = databases.map((db, idx) => ({
-            id: db.id,
-            name: db.title?.[0]?.plain_text || `Database ${idx + 1}`,
+        const pages = await notionService.getPages()
+        if (pages.length) {
+          const boardsFromNotion = pages.map((pg, idx) => ({
+            id: pg.id,
+            name: pg.properties?.Name?.title?.[0]?.plain_text || `Page ${idx + 1}`,
             color: initialBoards[idx % initialBoards.length].color,
             tasks: [],
           }))
@@ -139,8 +139,8 @@ const Index = () => {
   useEffect(() => {
     const fetchPages = async () => {
       try {
-        const data = await notionService.getDatabasePages(selectedBoardId)
-        setNotionData(data)
+        const data = await notionService.getPage(selectedBoardId)
+        setNotionData({ object: 'list', results: [data] } as any)
       } catch (e) {
         console.error('Error fetching pages', e)
       }
