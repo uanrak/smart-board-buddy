@@ -6,9 +6,9 @@ import { Sidebar } from '@/components/Sidebar'
 import { TaskBoard } from '@/components/TaskBoard'
 import { FloatingChat } from '@/components/FloatingChat'
 import { Board, Task } from '@/types'
-import { getTasksFromNotion } from '@/services/notion'
 import NotionRenderer from '@/components/NotionRenderer'
-import { mockNotionData } from '@/mock/notion'
+import { NotionDataResponse } from '@/interfaces/Notion'
+import { notionService } from '@/services/notion'
 
 const initialBoards: Board[] = [
   {
@@ -111,24 +111,43 @@ const Index = () => {
   const [boards, setBoards] = useState<Board[]>(initialBoards)
   const [selectedBoardId, setSelectedBoardId] = useState('1')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [notionData, setNotionData] = useState<NotionDataResponse | null>(null)
 
   useEffect(() => {
-    // Simulate fetching boards from an API
     const fetchBoards = async () => {
       try {
-        const tasks = await getTasksFromNotion()
-        console.log(` fetchBoards ~ tasks:`, tasks)
-        // For this example, we use the initialBoards defined above
-        setBoards(initialBoards)
+        const databases = await notionService.getDatabases()
+        if (databases.length) {
+          const boardsFromNotion = databases.map((db, idx) => ({
+            id: db.id,
+            name: db.title?.[0]?.plain_text || `Database ${idx + 1}`,
+            color: initialBoards[idx % initialBoards.length].color,
+            tasks: [],
+          }))
+          setBoards(boardsFromNotion)
+          setSelectedBoardId(boardsFromNotion[0].id)
+        }
       } catch (error) {
         console.error('Error fetching boards:', error)
-        // Fallback to initial boards in case of error
         setBoards(initialBoards)
       }
     }
 
     fetchBoards()
   }, [])
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const data = await notionService.getDatabasePages(selectedBoardId)
+        setNotionData(data)
+      } catch (e) {
+        console.error('Error fetching pages', e)
+      }
+    }
+
+    fetchPages()
+  }, [selectedBoardId])
 
   const selectedBoard = boards.find((board) => board.id === selectedBoardId)
 
@@ -191,7 +210,7 @@ const Index = () => {
                 onAddTask={addTask}
               />
             )}
-            <NotionRenderer blocks={mockNotionData} />
+            {notionData && <NotionRenderer blocks={notionData} />}
           </main>
         </div>
 

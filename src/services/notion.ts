@@ -1,25 +1,49 @@
-export async function getTasksFromNotion() {
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
-    'https://visualgpt-ba-aux-gccxwajtmoiyb.herokuapp.com'
+export class NotionService {
+  private token: string
+  private version = '2022-06-28'
 
-  const res = await fetch(`${API_BASE_URL}/notion/`)
-  const data = await res.json()
-  return data
-}
+  constructor() {
+    this.token = import.meta.env.NOTION_TOKEN || ''
+  }
 
-export async function getPageBlocks(pageId: string) {
-  const NOTION_TOKEN = import.meta.env.NOTION_TOKEN
-  const res = await fetch(
-    `https://api.notion.com/v1/blocks/${pageId}/children`,
-    {
-      headers: {
-        Authorization: `Bearer ${NOTION_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28',
-      },
+  private get headers() {
+    return {
+      Authorization: `Bearer ${this.token}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': this.version,
     }
-  )
-  const data = await res.json()
-  return data.results
+  }
+
+  async getDatabases() {
+    const res = await fetch('https://api.notion.com/v1/search', {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify({ filter: { property: 'object', value: 'database' } }),
+    })
+    const data = await res.json()
+    return data.results
+  }
+
+  async getDatabasePages(databaseId: string) {
+    const res = await fetch(
+      `https://api.notion.com/v1/databases/${databaseId}/query`,
+      {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({}),
+      }
+    )
+    return res.json()
+  }
+
+  async getPageBlocks(pageId: string) {
+    const res = await fetch(
+      `https://api.notion.com/v1/blocks/${pageId}/children`,
+      { headers: this.headers }
+    )
+    const data = await res.json()
+    return data.results
+  }
 }
+
+export const notionService = new NotionService()

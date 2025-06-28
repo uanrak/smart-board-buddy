@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatMessage } from '@/types'
 import { cn } from '@/lib/utils'
-import { callOpenAI } from '@/services/openai'
+import { openAIService } from '@/services/openai'
 
 const initialMessages: ChatMessage[] = [
   {
@@ -38,7 +38,7 @@ export const FloatingChat = () => {
 
     console.log(` handleSendMessage ~ updatedMessages:`, updatedMessages)
     try {
-      const response = await callOpenAI(updatedMessages)
+      const response = await openAIService.chat(updatedMessages)
       if (response.error) {
         console.error('Error from OpenAI:', response.error)
         throw new Error(response.error.message || 'Error desconocido')
